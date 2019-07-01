@@ -2,16 +2,20 @@
   <head>
     <script> wshost = "{{.Host}}"</script>
     <script src="/static/fotobox.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/fotobox.css">
 
   </head>
   <body>
     <header>
-      <h1>FossAG Fotobox</h1>
+      <div class="grid-container">
+      <img class="grid2v1r" src="/static/foss-ag.svg" width="128" height="128">
+      <span class="grid1v2r h1span" style="text-align: start;" >// FOSS-AG</span>
+      <span class="grid1v2r h1span" style="text-align: start;">// Fotobox</span></div>
       <span id="statusindicator" style="color: red;">WS Disconnected</span>
     </header>
-    <img height="500" id="img" alt="Your Picture" />
+    <img id="img" alt="Your Picture" />
     <br>
-    <img width="256" height="256" id="qr"></svg>
+    <img id="qr"></svg>
     <p id="svgtext"></p>
   </body>
 </html>

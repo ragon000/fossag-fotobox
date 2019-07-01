@@ -8,10 +8,11 @@ body {
 }
 
 .h1span {
- font-size: 64px;
+ font-size: 32px;
  height: 64px;
  line-height: 64px;
  text-align: start;
+  padding-left: 32px;
 }
 
 span,p {
@@ -29,29 +30,29 @@ img {
 }
 
 .grid1v2r {
-  display: !important inline-grid;
+  display: !important grid;
   grid-column: 2;
   margin-left: 5px;
   margin-top: 0;
   margin-bottom: 0;
-
-  border: solid 1px;
 }
 
 
 .grid2v1r {
-  display: !important inline-grid;
+  display: !important grid;
   grid-row: 1 / 2;
   grid-column: 1;
   margin-right: 0;
   margin-top: 0;
   margin-bottom: 0;
-  border: solid 1px;
+
 }
 
 .grid-container {
   grid-gap: 0;
+  height: 128px;
   display: grid;
+  grid-template-rows: 64px 64px;
  
 }
 

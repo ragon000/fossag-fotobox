@@ -22,6 +22,8 @@ const (
 
         // path where the uploads go
         uploadPath = "./uploads"
+        staticPath = "./static"
+        homeHTML = "./templates/index.html"
 
         maxUploadSize = 16 * 1024 * 1024 // 16MB
 
@@ -29,7 +31,7 @@ const (
 
 var (
 	addr      = flag.String("addr", ":8080", "http service address")
-	homeTempl = template.Must(template.New("").Parse(homeHTML))
+	homeTempl = template.Must(template.ParseFiles(homeHTML))
         serverChan = make(chan chan string, 4)
         messageChan = make(chan string, 1)
 	upgrader  = websocket.Upgrader{
@@ -202,57 +204,13 @@ func main() {
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", serveWs)
         http.HandleFunc("/upload", uploadFileHandler())
-        fs := http.FileServer(http.Dir(uploadPath))
-        http.Handle("/files/", http.StripPrefix("/files", fs))
+        uploadfs := http.FileServer(http.Dir(uploadPath)) // File Server for uploads
+        staticfs := http.FileServer(http.Dir(staticPath)) // File Server for staic files (js,css)
+        http.Handle("/files/", http.StripPrefix("/files", uploadfs))
+        http.Handle("/static/", http.StripPrefix("/static", staticfs))
+        http.Handle("/favicon.ico", staticfs) // link favicon.ico to the static file server
         log.Printf("Server starting at %s, have fun", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.Fatal(err)
 	}
 }
-
-const homeHTML = `<!DOCTYPE html>
-  <head>
-  <script>
-    (function(){
-      console.log("hi");
-    ws = new WebSocket("ws://{{.Host}}/ws");
-    
-    
-    ws.onopen = function() {
-    
-       // Web Socket is connected, send data uting send()
-       ele = document.getElementById("statusindicator");
-       ele.style = 'color: green;';
-       ele.innerHTML = 'WS Connected';
-    };
-    ws.onclose = function() {
-       ele = document.getElementById("statusindicator");
-       ele.style = 'color: red;';
-       ele.innerHTML = 'WS Disconnected';
-       alert("WS Disconnected, reload the page")
-    };
-    
-    ws.onmessage = (evt)=>{
-      var rec = evt.data;
-      console.log(evt.data);
-      var json = JSON.parse(rec);
-      document.getElementById("qr").src = "data:image/png;base64,"+json.qr;
-      document.getElementById("svgtext").innerHTML = json.img;
-      document.getElementById("img").src = json.img;
-    };
-    })();
-  </script>
-  </head>
-  <body>
-    <header>
-      <h1>FossAG Fotobox</h1>
-      <span id="statusindicator" style="color: red;">WS Disconnected</span>
-    </header>
-    <img height="500" id="img" alt="Your Picture" />
-    <br>
-    <img width="256" height="256" id="qr"></svg>
-    <p id="svgtext"></p>
-  </body>
-</html>
-
-`

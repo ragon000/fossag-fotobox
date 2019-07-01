@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="/static/fotobox.css">
+  </head>
+  <body>
+    <header>
+      <div class="grid-container">
+      <img class="grid2v1r" src="/static/foss-ag.svg" width="128" height="128">
+      <span class="grid1v2r h1span">// FOSS-AG</span>
+      <span class="grid1v2r h1span">// Fotobox</span></div>
+    </header>
+    <img id="img" alt="Your Picture" src="/files/{{.Image}}" />
+    <a href="/files/{{.Image}}" download><button>Click here to download</button></a>
+    <form method="POST">
+      <input type="submit" value="Click here to delete"></input>
+    </form>
+    <br>
+    <img id="qr"></svg>
+    <p id="svgtext"></p>
+  </body>
+</html>

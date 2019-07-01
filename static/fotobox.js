@@ -22,7 +22,7 @@ ws.onmessage = (evt)=>{
   console.log(evt.data);
   var json = JSON.parse(rec);
   document.getElementById("qr").src = "data:image/png;base64,"+json.qr;
-  document.getElementById("svgtext").innerHTML = json.img;
+  document.getElementById("svgtext").innerHTML = json.show;
   document.getElementById("img").src = json.img;
 };
 })();

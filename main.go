@@ -4,6 +4,7 @@ import (
 	"flag"
 	"html/template"
 	"io/ioutil"
+        "strings"
 	"log"
 	"net/http"
         "mime"
@@ -24,6 +25,7 @@ const (
         uploadPath = "./uploads"
         staticPath = "./static"
         homeHTML = "./templates/index.html"
+        showHTML = "./templates/show.html"
 
         maxUploadSize = 16 * 1024 * 1024 // 16MB
 
@@ -32,6 +34,7 @@ const (
 var (
 	addr      = flag.String("addr", ":8080", "http service address")
 	homeTempl = template.Must(template.ParseFiles(homeHTML))
+	showTempl = template.Must(template.ParseFiles(showHTML))
         serverChan = make(chan chan string, 4)
         messageChan = make(chan string, 1)
 	upgrader  = websocket.Upgrader{
@@ -64,10 +67,6 @@ func server(serverChan chan chan string) {
         select {
         case client, _ := <-serverChan:
             clients = append(clients, client)
-            // Broadcast the number of clients to all clients:
-            for _, c := range clients {
-                c <- fmt.Sprintf("%d client(s) connected.", len(clients))
-            }
         }
     }
 }
@@ -104,7 +103,7 @@ func uploadFileHandler() http.HandlerFunc {
 			renderError(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
 			return
 		}
-		fileName := randToken(12)
+		fileName := randToken(8)
 		fileEndings, err := mime.ExtensionsByType(fileType)
 		if err != nil {
 			renderError(w, "CANT_READ_FILE_TYPE", http.StatusInternalServerError)
@@ -132,13 +131,14 @@ func uploadFileHandler() http.HandlerFunc {
 func fileUploaded(Host string, filename string){
   var png []byte
   var httpstring string = "http://"+Host+"/files/"+filename
-  png, err := qrcode.Encode(httpstring, qrcode.Medium, 256)
+  var showstring string = "http://"+Host+"/show/"+filename
+  png, err := qrcode.Encode(showstring, qrcode.Medium, 256)
   if err != nil {
     log.Fatal(err)
   }
   pngenc := b64.StdEncoding.EncodeToString(png)
 
-  resmap := map[string]string{"qr": pngenc, "img": httpstring}
+  resmap := map[string]string{"qr": pngenc, "img": httpstring,"show": showstring}
   resjson, _ := json.Marshal(resmap)
   messageChan <- string(resjson)
 
@@ -195,6 +195,36 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	homeTempl.Execute(w, &v)
 }
 
+func serveShow(w http.ResponseWriter, r *http.Request) {
+        varimage := strings.Replace(r.URL.Path,"/show/","",1) // Request variable
+	if r.Method == "POST" { // POST (and not DELETE) because HTML forms just support GET and POST
+                err := os.Remove(uploadPath+"/"+varimage)
+                if err != nil {
+                  log.Fatal(err)
+                }
+		w.Write([]byte("SUCCESS, you can close this Tab now"))
+                return
+	}
+        if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+        if _, err := os.Stat(uploadPath+"/"+varimage); os.IsNotExist(err) {
+		http.Error(w, "Not Found", http.StatusNotFound)
+                return
+        }
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	var v = struct {
+		Host string
+                Image string
+	}{
+		r.Host,
+                varimage,
+	}
+	showTempl.Execute(w, &v)
+}
+
 func main() {
         // Start the server and keep track of the channel that it receives
         // new clients on:
@@ -202,6 +232,7 @@ func main() {
         go messageServer(serverChan)
 
 	http.HandleFunc("/", serveHome)
+	http.HandleFunc("/show/", serveShow)
 	http.HandleFunc("/ws", serveWs)
         http.HandleFunc("/upload", uploadFileHandler())
         uploadfs := http.FileServer(http.Dir(uploadPath)) // File Server for uploads

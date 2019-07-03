@@ -1,4 +1,8 @@
+![MicroBadger Size](https://img.shields.io/microbadger/image-size/ragon000/fossag-fotobox.svg)
+![Docker Stars](https://img.shields.io/docker/stars/ragon000/fossag-fotobox.svg)
+![Docker Build Status](https://img.shields.io/docker/build/ragon000/fossag-fotobox.svg)
 # fossag-fotobox
+
 
 A webserver to host your cloud fotobox
 
